@@ -1471,21 +1471,25 @@
 
 - (void)doubleTapAtPoint:(CGPoint)aPoint
 {
-    [self registerZoomEventByUser:YES];
 
-    if (self.zoomingInPivotsAroundCenter)
+    if (!_delegateHasDoubleTapOnMap)
     {
-        [self zoomInToNextNativeZoomAt:[self convertPoint:self.center fromView:self.superview] animated:YES];
-    }
-    else if (userTrackingMode != RMUserTrackingModeNone && fabsf(aPoint.x - [self coordinateToPixel:userLocation.location.coordinate].x) < 75 && fabsf(aPoint.y - [self coordinateToPixel:userLocation.location.coordinate].y) < 75)
-    {
-        [self zoomInToNextNativeZoomAt:[self coordinateToPixel:userLocation.location.coordinate] animated:YES];
-    }
-    else
-    {
-        [self registerMoveEventByUser:YES];
-
-        [self zoomInToNextNativeZoomAt:aPoint animated:YES];
+        [self registerZoomEventByUser:YES];
+        
+        if (self.zoomingInPivotsAroundCenter)
+        {
+            [self zoomInToNextNativeZoomAt:[self convertPoint:self.center fromView:self.superview] animated:YES];
+        }
+        else if (userTrackingMode != RMUserTrackingModeNone && fabsf(aPoint.x - [self coordinateToPixel:userLocation.location.coordinate].x) < 75 && fabsf(aPoint.y - [self coordinateToPixel:userLocation.location.coordinate].y) < 75)
+        {
+            [self zoomInToNextNativeZoomAt:[self coordinateToPixel:userLocation.location.coordinate] animated:YES];
+        }
+        else
+        {
+            [self registerMoveEventByUser:YES];
+            
+            [self zoomInToNextNativeZoomAt:aPoint animated:YES];
+        }
     }
 
     if (_delegateHasDoubleTapOnMap)
@@ -2655,7 +2659,10 @@
         locationManager = [[CLLocationManager alloc] init];
         locationManager.headingFilter = 5.0;
         locationManager.delegate = self;
+        locationManager.distanceFilter = 50.0f; //by gwn
+        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation; // by gwn
         [locationManager startUpdatingLocation];
+        [locationManager startMonitoringSignificantLocationChanges]; //by gwn
     }
     else
     {
@@ -2868,7 +2875,7 @@
 
             [self updateHeadingForDeviceOrientation];
 
-            [locationManager startUpdatingHeading];
+            //[locationManager startUpdatingHeading]; //commented by GWN
 
             break;
         }
@@ -2883,7 +2890,7 @@
     if ( ! showsUserLocation || _mapScrollView.isDragging || ! newLocation || ! CLLocationCoordinate2DIsValid(newLocation.coordinate))
         return;
 
-    if ([newLocation distanceFromLocation:oldLocation])
+    if (YES || [newLocation distanceFromLocation:oldLocation]) //gwn, also update to get speed is 0!
     {
         userLocation.location = newLocation;
 
@@ -2900,7 +2907,7 @@
 
         if (fabsf(userLocationPoint.x - mapCenterPoint.x) > 1.0 || fabsf(userLocationPoint.y - mapCenterPoint.y) > 1.0)
         {
-            if (round(_zoom) >= 10)
+            if (round(_zoom) >= 0) //gwn zooming done by gwn! was 10
             {
                 // at sufficient detail, just re-center the map; don't zoom
                 //
@@ -3029,6 +3036,8 @@
 
 - (void)locationManager:(CLLocationManager *)manager didUpdateHeading:(CLHeading *)newHeading
 {
+    return; //gwn
+
     if ( ! showsUserLocation || _mapScrollView.isDragging || newHeading.headingAccuracy < 0)
         return;
 
@@ -3067,6 +3076,45 @@
                          }
                          completion:nil];
 
+        [CATransaction commit];
+    }
+}
+
+- (void)gwnUpdateHeading:(CLLocationDirection)direction
+{
+    if ( ! showsUserLocation || _mapScrollView.isDragging)
+        return;
+    
+    if (direction != 0 && self.userTrackingMode == RMUserTrackingModeFollowWithHeading)
+    {
+        if (userHeadingTrackingView.alpha < 1.0)
+            [UIView animateWithDuration:0.5 animations:^(void) { userHeadingTrackingView.alpha = 1.0; }];
+        
+        [CATransaction begin];
+        [CATransaction setAnimationDuration:0.5];
+        [CATransaction setAnimationTimingFunction:[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut]];
+        
+        [UIView animateWithDuration:0.5
+                              delay:0.0
+                            options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationCurveEaseInOut
+                         animations:^(void)
+         {
+             CGFloat angle = (M_PI / -180) * direction;
+             
+             _mapTransform = CGAffineTransformMakeRotation(angle);
+             _annotationTransform = CATransform3DMakeAffineTransform(CGAffineTransformMakeRotation(-angle));
+             
+             _mapScrollView.transform = _mapTransform;
+             _overlayView.transform   = _mapTransform;
+             
+             for (RMAnnotation *annotation in _annotations)
+                 if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation)
+                     annotation.layer.transform = _annotationTransform;
+             
+             [self correctPositionOfAllAnnotations];
+         }
+                         completion:nil];
+        
         [CATransaction commit];
     }
 }
