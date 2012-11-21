@@ -2407,7 +2407,7 @@
             if (annotation.layer == nil)
                 continue;
 
-            if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation)
+            if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation && ![annotation.title isEqualToString:@"labelForLine"]) //gwn temp
                 annotation.layer.transform = _annotationTransform;
 
             // Use the zPosition property to order the layer hierarchy
@@ -2461,7 +2461,7 @@
                         if (annotation.layer == nil)
                             continue;
 
-                        if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation)
+                        if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation && ![annotation.title isEqualToString:@"labelForLine"]) //gwn temp
                             annotation.layer.transform = _annotationTransform;
 
                         if (![_visibleAnnotations containsObject:annotation])
@@ -2756,7 +2756,7 @@
                                  _overlayView.transform   = _mapTransform;
 
                                  for (RMAnnotation *annotation in _annotations)
-                                     if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation)
+                                     if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation && ![annotation.title isEqualToString:@"labelForLine"]) //gwn temp
                                          annotation.layer.transform = _annotationTransform;
                              }
                              completion:nil];
@@ -2805,7 +2805,7 @@
                                  _overlayView.transform   = _mapTransform;
 
                                  for (RMAnnotation *annotation in _annotations)
-                                     if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation)
+                                     if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation && ![annotation.title isEqualToString:@"labelForLine"]) //gwn temp
                                          annotation.layer.transform = _annotationTransform;
                              }
                              completion:nil];
@@ -3069,7 +3069,7 @@
                              _overlayView.transform   = _mapTransform;
 
                              for (RMAnnotation *annotation in _annotations)
-                                 if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation)
+                                 if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation && ![annotation.title isEqualToString:@"labelForLine"]) //gwn temp
                                      annotation.layer.transform = _annotationTransform;
 
                              [self correctPositionOfAllAnnotations];
@@ -3108,7 +3108,7 @@
              _overlayView.transform   = _mapTransform;
              
              for (RMAnnotation *annotation in _annotations)
-                 if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation)
+                 if ([annotation.layer isKindOfClass:[RMMarker class]] && ! annotation.isUserLocationAnnotation && ![annotation.title isEqualToString:@"labelForLine"]) //gwn temp
                      annotation.layer.transform = _annotationTransform;
              
              [self correctPositionOfAllAnnotations];
