@@ -54,7 +54,7 @@
 
 #pragma mark --- begin constants ----
 
-#define kZoomRectPixelBuffer 150.0
+#define kZoomRectPixelBuffer 0 //gwn
 
 #define kDefaultInitialLatitude  38.913175
 #define kDefaultInitialLongitude -77.032458
